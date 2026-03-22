@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import json
 import os
-from tkinter import *
 from tkinter import filedialog
 
 def export_preset(l_h, l_s, l_v, u_h, u_s, u_v):
@@ -23,22 +22,6 @@ def export_preset(l_h, l_s, l_v, u_h, u_s, u_v):
 
 def nothing(x):
     pass
-
-# setup tkinter (save preset)
-root = Tk()
-root.title('Control Panel')
-root.geometry('200x100')
-btn_export = Button(root, text='Export JSON', 
-                    command=lambda:export_preset(
-                        cv2.getTrackbarPos("L - H", "Trackbars"),
-                        cv2.getTrackbarPos("L - S", "Trackbars"),
-                        cv2.getTrackbarPos("L - V", "Trackbars"),
-                        cv2.getTrackbarPos("U - H", "Trackbars"),
-                        cv2.getTrackbarPos("U - S", "Trackbars"),
-                        cv2.getTrackbarPos("U - V", "Trackbars")
-                    ),
-                    bg='green', fg='white', font=('Arial', 10, 'bold'))
-btn_export.pack(expand=True, fill=BOTH, padx=10, pady=10)
 
 cap = cv2.VideoCapture(0)
 cv2.namedWindow("Trackbars")
@@ -80,17 +63,13 @@ while True:
     cv2.imshow("Camera", frame)
     cv2.imshow("Mask Kalibrasi Camera", mask)
 
-    root.update_idletasks()
-    root.update()
-
     key = cv2.waitKey(1) & 0xFF
 
-    # if key == ord('s'):
-    #     export_preset(l_h, l_s, l_v, u_h, u_s, u_v)
+    if key == ord('s'):
+        export_preset(l_h, l_s, l_v, u_h, u_s, u_v)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    elif cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
 cap.release()
 cv2.destroyAllWindows()
-root.destroy()

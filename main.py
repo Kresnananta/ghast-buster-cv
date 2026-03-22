@@ -1,15 +1,39 @@
 import cv2
 import numpy as np
+import json
+import os
+from tkinter import filedialog, Tk
+
+
+def import_preset():
+    root = Tk()
+    root.withdraw()
+    root.attributes('-topmost', True)
+
+    file_path = filedialog.askopenfilename(
+        initialdir=os.path.join(os.getcwd(), 'preset'),
+        title="Pilih preset kamera",
+        filetypes=[('JSON Files', '*.json')]
+    )
+    root.destroy()
+
+    if file_path:
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+            return np.array(data['lower']), np.array(data['upper'])
+    
+    # kalau di cancel
+    return None, None
 
 cap = cv2.VideoCapture(0)
 
+# default value
 lower_skin = np.array([0, 23, 141])
 upper_skin = np.array([89, 255, 255])
 
 while True:
     ret, frame = cap.read()
     if not ret:
-        print("Can't receive frame")
         break
 
     frame = cv2.flip(frame, 1)
@@ -39,12 +63,22 @@ while True:
                 
                 cv2.drawContours(frame, [largest_contour], -1, (0, 255, 0), 2)
 
+    cv2.putText(frame, "Press 'i' to Import Preset", (20, 30), 
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+
     cv2.imshow("Shield Defense", frame)
     cv2.imshow("Clean Mask", mask)
 
-    cv2.imshow('Camera Feed', frame)
+    key = cv2.waitKey(1) & 0xFF
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    if key == ord('i'):
+        new_lower, new_upper = import_preset()
+        if new_lower is not None:
+            lower_skin = new_lower
+            upper_skin = new_upper
+            print('Preset berhasil di import')
+
+    elif key == ord('q'):
         break
 
 cap.release()
