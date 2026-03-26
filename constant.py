@@ -1,0 +1,11 @@
+import numpy as np
+
+CAM_W = 640
+CAM_H = 480
+
+DEFAULT_LOWER_SKIN = np.array([0, 23, 141])
+DEFAULT_UPPER_SKIN = np.array([89, 255, 255])
+
+SHIELD_RAD = 60
+ENEMY_RAD = 25
+ENEMY_SPEED = 7
