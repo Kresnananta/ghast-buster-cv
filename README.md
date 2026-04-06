@@ -11,11 +11,14 @@ A computer vision-based mini-game inspired by Minecraft mechanics, built entirel
 
 *This project was developed to fulfill the requirements of the **Computer Vision** course taught by `Arta Kusuma Hernanda, B.S., M.S.`*
 
+> **Name**: Anak Agung Ngurah Agung Kresna Ananta  
+> **Department**: Computer Engineering  
+> **NRP**: 5024241085
+
 ## Features
 
 * **Real-Time Hand Tracking:** Utilizes HSV color space masking, morphological operations, and image moments to accurately track the player's hand position.
-* **Hybrid User Interface:** Combines OpenCV's high-speed video rendering with a Tkinter GUI Control Panel for intuitive system calibration.
-* **Dynamic Color Calibration:** Export and import skin color HSV profiles (`.json`) on the fly using native file explorer dialogs.
+* **Dynamic Color Calibration:** Export and import skin color HSV profiles (`.json`) on the fly using Tkinter file explorer dialogs.
 * **Custom Alpha Blending:** Manually implements NumPy matrix operations to seamlessly overlay transparent `.png` assets (Shield and Fireballs) without performance drops.
 <!-- * **Finite State Machine (FSM):** Clean architectural design separating the application into distinct `START`, `PLAYING`, and `GAME OVER` states. -->
 
@@ -52,10 +55,22 @@ ghast-buster-cv/
 1. **Calibration (Important)**  
     Lighting conditions affect computer vision heavily. Before playing, run `calibrate.py` to adjust the **HSV sliders** until your hand is completely white (and the background is black) in the Mask window. Click Export JSON to save your environment's preset.
 2. **Keybinds You Must Know**
-    - i : Import your saved .json color preset (can be done during the game).
+    - `i` : Import your saved .json color preset (can be done during the game).
+    - `s` : Save preset in `calibrateCam.py`.
+    - `q` : Quit the application.
 
-    - s : Save preset in `calibrateCam.py`.
+## Project Progress
+This project is currently under active development. Below is the checklist of planned and completed features:
+- [x] **Phase 1: Core Engine & Calibration**
+  - [x] Initialize OpenCV camera feed and basic mirroring.
+  - [x] Implement HSV skin color masking and morphological noise reduction.
+  - [x] Add functionality to Export/Import `.json` color presets using Tkinter `filedialog` module.
 
-    - q : Quit the application.
+- [ ] **Phase 2: Game Architecture**
+  - [ ] Set up Finite State Machine (START, PLAYING, GAME OVER).
+  - [x] Modularize codebase (`main.py`, <!--vision.py`,--> `constants.py`).
+
+- [ ] **Phase 3:**  
+. . .
 
 :0
