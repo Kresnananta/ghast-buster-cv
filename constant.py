@@ -54,3 +54,14 @@ SCORE_PER_DEFLECT = 10
 APP_STATE_MENU = 'menu'
 APP_STATE_PLAYING = 'playing'
 APP_STATE_QUIT = 'quit'
+
+
+SOUND_MENU_BGM = 'assets/sound/menu_bgm.mp3'
+SOUND_HIT = 'assets/sound/hit.mp3'
+SOUND_DEATH = 'assets/sound/death.mp3'
+SOUND_SELECT = 'assets/sound/select.mp3'
+SOUND_SHOOT = 'assets/sound/shoot.mp3'
+SOUND_DEFLECT = 'assets/sound/deflect.mp3'
+
+MUSIC_VOLUME = 0.35
+SFX_VOLUME = 0.75

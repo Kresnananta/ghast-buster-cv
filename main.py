@@ -15,9 +15,20 @@ from game import reset_game_state, update_ghast, update_fireballs
 from menu import draw_main_menu, handle_menu_input
 from calibrateCam import run_calibration
 from death_screen import draw_death_screen, handle_death_input
+from audio_manager import (
+    init_audio,
+    play_menu_music,
+    stop_music,
+    play_sfx,
+    shutdown_audio,
+)
 
 
 cap = cv2.VideoCapture(0)
+
+# init audio
+init_audio()
+play_menu_music()
 
 # load assets
 assets = load_assets()
@@ -56,8 +67,12 @@ while True:
 
         key = cv2.waitKey(1) & 0xFF
         menu_selected_index, action = handle_menu_input(key, menu_selected_index)
+        # click sound kalo navigasi menu
+        if key in [ord('w'), ord('W'), ord('s'), ord('S'), 82, 84]:
+            play_sfx("select")
 
         if action == "Play Game":
+            stop_music()
             state = reset_game_state()
 
             ghast = state["ghast"]
@@ -71,6 +86,7 @@ while True:
             app_state = constant.APP_STATE_PLAYING
 
         elif action == "Calibrate Camera":
+            stop_music()
             cap.release()
             cv2.destroyAllWindows()
 
@@ -78,8 +94,10 @@ while True:
 
             cap = cv2.VideoCapture(0)
             app_state = constant.APP_STATE_MENU
+            play_menu_music()
 
         elif action == "Quit Game":
+            play_sfx("select")
             break
 
         continue
@@ -107,7 +125,10 @@ while True:
     frame_count += 1
 
     if not game_over:
-        update_ghast(ghast, fireballs)
+        events = update_ghast(ghast, fireballs)
+
+        for event in events:
+            play_sfx(event)
 
     # render ghast
     ghast_idle_index = draw_ghast(
@@ -121,7 +142,7 @@ while True:
 
     # update fireballs
     if not game_over:
-        hp, score, lost = update_fireballs(
+        hp, score, lost, events = update_fireballs(
             fireballs,
             hand_detected,
             cx,
@@ -131,8 +152,12 @@ while True:
             deflect_effects
         )
 
+        for event in events:
+            play_sfx(event)
+
         if lost:
             game_over = True
+            play_sfx(event)
 
     # render fireballs
     draw_fireballs(frame, fireballs, fireball_img)
@@ -158,8 +183,12 @@ while True:
 
     if game_over:
         death_selected_index, action = handle_death_input(key, death_selected_index)
+        if key in [ord('w'), ord('W'), ord('s'), ord('S'), 82, 84]:
+            play_sfx("select")
 
         if action == "Retry":
+            play_sfx("select")
+
             state = reset_game_state()
 
             ghast = state["ghast"]
@@ -173,6 +202,9 @@ while True:
             death_selected_index = 0
 
         elif action == "Main Menu":
+            play_sfx("select")
+            play_menu_music()
+
             state = reset_game_state()
 
             ghast = state["ghast"]
@@ -198,22 +230,6 @@ while True:
             lower_skin = new_lower
             upper_skin = new_upper
             print('Preset berhasil di import')
-    
-    # restart game
-    elif key == ord('r'):
-        state = reset_game_state()
-
-        ghast = state["ghast"]
-        fireballs = state["fireballs"]
-        deflect_effects = state["deflect_effects"]
-        hp = state["hp"]
-        game_over = state["game_over"]
-        frame_count = state["frame_count"]
-        ghast_idle_index = state["ghast_idle_index"]
-
-    # back to menu
-    elif key == ord('m'):
-        app_state = constant.APP_STATE_MENU
 
     # quit game
     elif key == ord('q'):
@@ -221,3 +237,4 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
+shutdown_audio()

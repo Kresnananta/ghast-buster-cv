@@ -78,6 +78,7 @@ def spawn_deflect_effect(deflect_effects, x, y):
 
 
 def update_ghast(ghast, fireballs):
+    events = []
     
     # idle
     if ghast["state"] == "idle":
@@ -135,6 +136,7 @@ def update_ghast(ghast, fireballs):
                 "vx": vx,
                 "vy": constant.ENEMY_SPEED,
             })
+            events.append("shoot")
 
             ghast["burst_left"] -= 1
             ghast["burst_timer"] = constant.GHAST_BURST_INTERVAL
@@ -143,9 +145,11 @@ def update_ghast(ghast, fireballs):
             ghast["state"] = "idle"
             ghast["cooldown"] = constant.FIREBALL_COOLDOWN
 
+    return events
 
 def update_fireballs(fireballs, hand_detected, cx, cy, hp, score, deflect_effects):
     game_over = False
+    events = []
 
     for fireball in fireballs[:]:
         if not game_over:
@@ -162,14 +166,17 @@ def update_fireballs(fireballs, hand_detected, cx, cy, hp, score, deflect_effect
                 fireballs.remove(fireball)
                 spawn_deflect_effect(deflect_effects, int(fx), int(fy))
                 score += constant.SCORE_PER_DEFLECT # nambah score
+                events.append("deflect")
                 continue
 
         if fy > constant.CAM_H or fx < 0 or fx > constant.CAM_W:
             fireballs.remove(fireball)
             hp -= 1
+            events.append("hit")
 
             if hp <= 0:
                 hp = 0
                 game_over = True
+                events.append("death")
     
-    return hp, score, game_over
+    return hp, score, game_over, events
