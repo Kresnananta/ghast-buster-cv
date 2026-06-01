@@ -28,7 +28,51 @@ def import_preset():
     # kalau di cancel
     return None, None
 
+def overlay_transparent(background, overlay, x, y):
+    h, w = overlay.shape[:2]
+    bg_h, bg_w = background.shape[:2]
+
+    if x >= bg_w or y>= bg_h or x + w <= 0 or y + h <= 0:
+        return background
+    
+    x1 = max(x, 0)
+    y1 = max(y, 0)
+    x2 = min(x + w, bg_w)
+    y2 = min(y + h, bg_h)
+
+    overlay_x1 = x1 - x
+    overlay_y1 = y1 - y
+    overlay_x2 = overlay_x1 + (x2 - x1)
+    overlay_y2 = overlay_y1 + (y2 - y1)
+
+    overlay_crop = overlay[overlay_y1:overlay_y2, overlay_x1:overlay_x2]
+
+    if overlay_crop.shape[2] < 4:
+        background[y1:y2, x1:x2] = overlay_crop
+        return background
+    
+    alpha = overlay_crop[:, :, 3] / 255.0
+    alpha = alpha[:, :, np.newaxis]
+
+    foreground = overlay_crop[:, :, :3]
+    background_crop = background[y1:y2, x1:x2]
+
+    blended = (foreground * alpha) + (background_crop * (1 - alpha))
+    background[y1:y2, x1:x2] = blended.astype(np.uint8)
+
+    return background
+
 cap = cv2.VideoCapture(0)
+
+# load assets
+shield_img = cv2.imread(constant.SHIELD_ASSET, cv2.IMREAD_UNCHANGED)
+fireball_img = cv2.imread(constant.FIREBALL_ASSET, cv2.IMREAD_UNCHANGED)
+
+if shield_img is None or fireball_img is None:
+    raise FileNotFoundError('Asset shileld.png atau fireball.png tidak ditemukan di folder assets')
+
+shield_img = cv2.resize(shield_img, (constant.SHIELD_SIZE, constant.SHIELD_SIZE))
+fireball_img = cv2.resize(fireball_img, (constant.FIREBALL_SIZE, constant.FIREBALL_SIZE))
 
 # default value
 lower_skin = constant.DEFAULT_LOWER_SKIN
@@ -66,8 +110,10 @@ while True:
                 # m00 = total luas area putih; m10 & m01 = jumlah posisi pixel
                 hand_detected = True
 
-                cv2.circle(frame, (cx, cy), constant.SHIELD_RAD, (0, 255, 255), 3)
-                cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
+                # draw shield
+                shield_x = cx - constant.SHIELD_SIZE // 2
+                shield_y = cy - constant.SHIELD_SIZE // 2
+                overlay_transparent(frame, shield_img, shield_x, shield_y)
                 
                 cv2.drawContours(frame, [largest_contour], -1, (0, 255, 0), 2) # gambar area tangan
 
@@ -79,7 +125,10 @@ while True:
         ex, ey = enemy[0], enemy[1]
         enemy[1] += constant.ENEMY_SPEED
 
-        cv2.circle(frame, (ex, int(enemy[1])), constant.ENEMY_RAD, (0, 0, 255), -1)
+        # draw fireball
+        fireball_x = ex - constant.FIREBALL_SIZE // 2
+        fireball_y = int(enemy[1]) - constant.FIREBALL_SIZE // 2
+        overlay_transparent(frame, fireball_img, fireball_x, fireball_y)
 
         # colision check
         if hand_detected:

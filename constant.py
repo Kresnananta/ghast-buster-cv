@@ -9,3 +9,9 @@ DEFAULT_UPPER_SKIN = np.array([89, 255, 255])
 SHIELD_RAD = 60
 ENEMY_RAD = 25
 ENEMY_SPEED = 7
+
+SHIELD_ASSET = 'assets/shield.png'
+FIREBALL_ASSET = 'assets/fireball.png'
+
+SHIELD_SIZE = 120
+FIREBALL_SIZE = 60
