@@ -24,6 +24,7 @@ def reset_game_state():
         "game_over": False,
         "frame_count": 0,
         "ghast_idle_index": 0,
+        "score": 0,
     }
 
 
@@ -94,7 +95,7 @@ def update_ghast(ghast, fireballs):
             ghast["cooldown"] = constant.FIREBALL_COOLDOWN
 
 
-def update_fireballs(fireballs, hand_detected, cx, cy, hp, deflect_effects):
+def update_fireballs(fireballs, hand_detected, cx, cy, hp, score, deflect_effects):
     game_over = False
 
     for fireball in fireballs[:]:
@@ -111,6 +112,7 @@ def update_fireballs(fireballs, hand_detected, cx, cy, hp, deflect_effects):
             if distance < (constant.SHIELD_RAD + constant.ENEMY_RAD):
                 fireballs.remove(fireball)
                 spawn_deflect_effect(deflect_effects, int(fx), int(fy))
+                score += constant.SCORE_PER_DEFLECT # nambah score
                 continue
 
         if fy > constant.CAM_H or fx < 0 or fx > constant.CAM_W:
@@ -121,4 +123,4 @@ def update_fireballs(fireballs, hand_detected, cx, cy, hp, deflect_effects):
                 hp = 0
                 game_over = True
     
-    return hp, game_over
+    return hp, score, game_over

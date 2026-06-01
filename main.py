@@ -7,13 +7,14 @@ from renderer import (
     draw_fireballs,
     draw_hp,
     draw_deflect_effects,
-    draw_game_over,
+    draw_score,
 )
 from vision import detect_hand
 from assets_loader import load_assets
 from game import reset_game_state, update_ghast, update_fireballs
 from menu import draw_main_menu, handle_menu_input
 from calibrateCam import run_calibration
+from death_screen import draw_death_screen, handle_death_input
 
 
 cap = cv2.VideoCapture(0)
@@ -38,12 +39,14 @@ ghast = state["ghast"]
 fireballs = state["fireballs"]
 deflect_effects = state["deflect_effects"]
 hp = state["hp"]
+score = state["score"]
 game_over = state["game_over"]
 frame_count = state["frame_count"]
 ghast_idle_index = state["ghast_idle_index"]
 
 app_state = constant.APP_STATE_MENU
 menu_selected_index = 0
+death_selected_index = 0
 
 while True:
     # handle menu
@@ -118,12 +121,13 @@ while True:
 
     # update fireballs
     if not game_over:
-        hp, lost = update_fireballs(
+        hp, score, lost = update_fireballs(
             fireballs,
             hand_detected,
             cx,
             cy,
             hp,
+            score,
             deflect_effects
         )
 
@@ -137,9 +141,12 @@ while True:
     draw_deflect_effects(frame, deflect_effects)
     # render heart
     draw_hp(frame, hp)
+    # render score
+    draw_score(frame, score)
 
+    # render death screen
     if game_over:
-        frame = draw_game_over(frame)
+        frame = draw_death_screen(frame, score, death_selected_index)
 
     cv2.putText(frame, "I: Import Preset | M: Menu", (20, 30), 
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
@@ -148,6 +155,41 @@ while True:
     cv2.imshow("Clean Mask", mask)
 
     key = cv2.waitKey(1) & 0xFF
+
+    if game_over:
+        death_selected_index, action = handle_death_input(key, death_selected_index)
+
+        if action == "Retry":
+            state = reset_game_state()
+
+            ghast = state["ghast"]
+            fireballs = state["fireballs"]
+            deflect_effects = state["deflect_effects"]
+            hp = state["hp"]
+            score = state["score"]
+            game_over = state["game_over"]
+            frame_count = state["frame_count"]
+            ghast_idle_index = state["ghast_idle_index"]
+            death_selected_index = 0
+
+        elif action == "Main Menu":
+            state = reset_game_state()
+
+            ghast = state["ghast"]
+            fireballs = state["fireballs"]
+            deflect_effects = state["deflect_effects"]
+            hp = state["hp"]
+            score = state["score"]
+            game_over = state["game_over"]
+            frame_count = state["frame_count"]
+            ghast_idle_index = state["ghast_idle_index"]
+            death_selected_index = 0
+            app_state = constant.APP_STATE_MENU
+
+        elif key == ord('q'):
+            break
+
+        continue
 
     # import preset
     if key == ord('i'):
