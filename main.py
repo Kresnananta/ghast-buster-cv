@@ -107,25 +107,69 @@ def draw_deflect_effects(frame):
         if effect["life"] <= 0:
             deflect_effects.remove(effect)
 
+def create_ghast():
+    return {
+        "x": (constant.CAM_W - constant.GHAST_W) // 2,
+        "y": constant.GHAST_Y,
+        "vx": constant.GHAST_SPEED,
+        "cooldown": constant.FIREBALL_COOLDOWN,
+    }
+
+def draw_pixel_heart(frame, x, y, filled=True):
+    color = (0, 0, 255) if filled else (45, 45, 45)
+    outline = (255, 255, 255)
+
+    pattern = [
+        "01100110",
+        "11111111",
+        "11111111",
+        "11111111",
+        "01111110",
+        "00111100",
+        "00011000",
+    ]
+
+    scale = 3
+
+    for row, line in enumerate(pattern):
+        for col, pixel in enumerate(line):
+            if pixel == "1":
+                x1 = x + col * scale
+                y1 = y + row * scale
+                cv2.rectangle(frame, (x1, y1), (x1 + scale, y1 + scale), color, -1)
+
+    cv2.rectangle(frame, (x, y), (x + 8 * scale, y + 7 * scale), outline, 1)
+
+def draw_hp(frame, hp):
+    for i in range(constant.MAX_HP):
+        heart_x = 20 + i * 32
+        heart_y = 45
+        draw_pixel_heart(frame, heart_x, heart_y, i < hp)
+
 cap = cv2.VideoCapture(0)
 
 # load assets
 shield_img = cv2.imread(constant.SHIELD_ASSET, cv2.IMREAD_UNCHANGED)
 fireball_img = cv2.imread(constant.FIREBALL_ASSET, cv2.IMREAD_UNCHANGED)
+ghast_img = cv2.imread(constant.GHAST_ASSET, cv2.IMREAD_UNCHANGED)
 
-if shield_img is None or fireball_img is None:
-    raise FileNotFoundError('Asset shileld.png atau fireball.png tidak ditemukan di folder assets')
+if shield_img is None or fireball_img is None or ghast_img is None:
+    raise FileNotFoundError('Asset shileld.png, fireball.png, atau ghast.png tidak ditemukan di folder assets')
 
 shield_img = cv2.resize(shield_img, (constant.SHIELD_SIZE, constant.SHIELD_SIZE))
 fireball_img = cv2.resize(fireball_img, (constant.FIREBALL_SIZE, constant.FIREBALL_SIZE))
+ghast_img = cv2.resize(ghast_img, (constant.GHAST_W, constant.GHAST_H))
 
 # default value
 lower_skin = constant.DEFAULT_LOWER_SKIN
 upper_skin = constant.DEFAULT_UPPER_SKIN
 
-enemies = []
-
+ghast = create_ghast()
+fireballs = []
 deflect_effects = []
+
+hp = constant.MAX_HP
+game_over = False
 
 while True:
     ret, frame = cap.read()
@@ -164,36 +208,69 @@ while True:
                 
                 cv2.drawContours(frame, [largest_contour], -1, (0, 255, 0), 2) # gambar area tangan
 
-    if random.randint(1, 20) == 1:
-        random_x = random.randint(constant.ENEMY_RAD, 640 - constant.ENEMY_RAD)
-        enemies.append([random_x, 0])
+    # ghast movemenent + shooting
+    if not game_over:
+        ghast["x"] += ghast["vx"]
 
-    for enemy in enemies[:]:
-        ex, ey = enemy[0], enemy[1]
-        enemy[1] += constant.ENEMY_SPEED
+        if ghast["x"] <= 0 or ghast["x"] + constant.GHAST_W >= constant.CAM_W:
+            ghast["vx"] *= -1
+            ghast["x"] = max(0, min(ghast["x"], constant.CAM_W - constant.GHAST_W))
 
-        # draw fireball
-        fireball_x = ex - constant.FIREBALL_SIZE // 2
-        fireball_y = int(enemy[1]) - constant.FIREBALL_SIZE // 2
+        ghast["cooldown"] -= 1
+
+        mouth_x = int(ghast["x"]) + constant.GHAST_MOUTH_OFFSET_X
+        mouth_y = ghast["y"] + constant.GHAST_MOUTH_OFFSET_Y
+
+        if ghast["cooldown"] <= 0 and len(fireballs) < constant.MAX_FIREBALLS:
+            fireballs.append({
+                "x": mouth_x,
+                "y": mouth_y,
+                "vy": constant.ENEMY_SPEED,
+            })
+            ghast["cooldown"] = constant.FIREBALL_COOLDOWN
+
+    overlay_transparent(frame, ghast_img, int(ghast["x"]), ghast["y"])
+
+
+    for fireball in fireballs[:]:
+        if not game_over:
+            fireball["y"] += fireball["vy"]
+
+        fx = fireball["x"]
+        fy = fireball["y"]
+
+        fireball_x = int(fx) - constant.FIREBALL_SIZE // 2
+        fireball_y = int(fy) - constant.FIREBALL_SIZE // 2
         overlay_transparent(frame, fireball_img, fireball_x, fireball_y)
 
-        # colision check
-        if hand_detected:
-            # euclidean distance
-            distance = math.sqrt(pow((cx - ex), 2) + pow((cy - enemy[1]), 2))
+        if hand_detected and not game_over:
+            distance = math.sqrt(pow((cx - fx), 2) + pow((cy - fy), 2))
 
             if distance < (constant.SHIELD_RAD + constant.ENEMY_RAD):
-                enemies.remove(enemy)
-                # draw deflect effect
-                spawn_deflect_effect(ex, int(enemy[1]))
+                fireballs.remove(fireball)
+                spawn_deflect_effect(int(fx), int(fy))
                 continue
-            
-        # kalo enemy lolos
-        if enemy[1] > 480:
-            enemies.remove(enemy)
-            # harusnya hitpoint berkurang nanti
+
+        if fy > constant.CAM_H:
+            fireballs.remove(fireball)
+            hp -= 1
+
+            if hp <= 0:
+                hp = 0
+                game_over = True
 
     draw_deflect_effects(frame)
+    draw_hp(frame, hp)
+
+    if game_over:
+        dim = frame.copy()
+        cv2.rectangle(dim, (0, 0), (constant.CAM_W, constant.CAM_H), (0, 0, 0), -1)
+        frame = cv2.addWeighted(frame, 0.45, dim, 0.55, 0)
+
+        cv2.putText(frame, "GAME OVER", (145, 220),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.4, (0, 0, 255), 4)
+        cv2.putText(frame, "Press R to Restart or Q to Quit", (95, 265),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 255), 2)
 
     cv2.putText(frame, "Press 'i' to Import Preset", (20, 30), 
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
@@ -203,13 +280,23 @@ while True:
 
     key = cv2.waitKey(1) & 0xFF
 
+    # import preset
     if key == ord('i'):
         new_lower, new_upper = import_preset()
         if new_lower is not None:
             lower_skin = new_lower
             upper_skin = new_upper
             print('Preset berhasil di import')
+    
+    # restart game
+    elif key == ord('r'):
+        ghast = create_ghast()
+        fireballs.clear()
+        deflect_effects.clear()
+        hp = constant.MAX_HP
+        game_over = False
 
+    # quit game
     elif key == ord('q'):
         break
 
