@@ -29,6 +29,7 @@ def load_assets():
         constant.GHAST_IDLE_ASSET,
         (constant.GHAST_W, constant.GHAST_H)
     )
+    menu_background = cv2.imread(constant.MENU_BACKGROUND_ASSET)
 
     if shield_img is None:
         raise FileNotFoundError(f'Asset tidak ditemukan: {constant.SHIELD_ASSET}')
@@ -38,6 +39,9 @@ def load_assets():
 
     if ghast_shooting_img is None:
         raise FileNotFoundError(f'Asset tidak ditemukan: {constant.GHAST_SHOOTING_ASSET}')
+    
+    if menu_background is None:
+        raise FileNotFoundError(f'Asset tidak ditemukan: {constant.MENU_BACKGROUND_ASSET}')
 
     shield_img = cv2.resize(
         shield_img,
@@ -57,9 +61,16 @@ def load_assets():
         interpolation=cv2.INTER_NEAREST
     )
 
+    menu_background = cv2.resize(
+        menu_background,
+        (constant.CAM_W, constant.CAM_H),
+        interpolation=cv2.INTER_AREA
+    )
+
     return {
         "shield": shield_img,
         "fireball": fireball_img,
         "ghast_idle_frames": ghast_idle_frames,
         "ghast_shooting": ghast_shooting_img,
+        "menu_background": menu_background,
     }

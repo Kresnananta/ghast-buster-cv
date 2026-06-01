@@ -16,6 +16,8 @@ SHIELD_ASSET = 'assets/shield.png'
 FIREBALL_ASSET = 'assets/fireball.png'
 GHAST_IDLE_ASSET = 'assets/ghast_idle.gif'
 GHAST_SHOOTING_ASSET = 'assets/ghast_shooting.png'
+MENU_BACKGROUND_ASSET = 'assets/menu_background.jpg'
+MENU_FONT_ASSET = 'assets/fonts/Minecraft.ttf'
 
 SHIELD_SIZE = 120
 FIREBALL_SIZE = 60
@@ -40,3 +42,7 @@ MAX_FIREBALLS = 9
 DEFLECT_EFFECT_LIFE = 14
 DEFLECT_SPARK_COUNT = 16
 DEFLECT_SPARK_SPEED = 9
+
+APP_STATE_MENU = 'menu'
+APP_STATE_PLAYING = 'playing'
+APP_STATE_QUIT = 'quit'

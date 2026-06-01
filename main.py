@@ -12,6 +12,7 @@ from renderer import (
 from vision import detect_hand
 from assets_loader import load_assets
 from game import reset_game_state, update_ghast, update_fireballs
+from menu import draw_main_menu, handle_menu_input
 
 
 cap = cv2.VideoCapture(0)
@@ -23,6 +24,7 @@ shield_img = assets["shield"]
 fireball_img = assets["fireball"]
 ghast_idle_frames = assets["ghast_idle_frames"]
 ghast_shooting_img = assets["ghast_shooting"]
+menu_background = assets["menu_background"]
 
 # default value
 lower_skin = constant.DEFAULT_LOWER_SKIN
@@ -39,7 +41,40 @@ game_over = state["game_over"]
 frame_count = state["frame_count"]
 ghast_idle_index = state["ghast_idle_index"]
 
+app_state = constant.APP_STATE_MENU
+menu_selected_index = 0
+
 while True:
+    # handle menu
+    if app_state == constant.APP_STATE_MENU:
+        frame = draw_main_menu(menu_background, menu_selected_index)
+        cv2.imshow("Shield Defense", frame)
+
+        key = cv2.waitKey(1) & 0xFF
+        menu_selected_index, action = handle_menu_input(key, menu_selected_index)
+
+        if action == "Play Game":
+            state = reset_game_state()
+
+            ghast = state["ghast"]
+            fireballs = state["fireballs"]
+            deflect_effects = state["deflect_effects"]
+            hp = state["hp"]
+            game_over = state["game_over"]
+            frame_count = state["frame_count"]
+            ghast_idle_index = state["ghast_idle_index"]
+
+            app_state = constant.APP_STATE_PLAYING
+
+        elif action == "Calibrate Camera":
+            print("Calibration menu belum disambungkan. Step berikutnya.")
+
+        elif action == "Quit Game":
+            break
+
+        continue
+    
+    # handle game
     ret, frame = cap.read()
     if not ret:
         break
@@ -88,7 +123,6 @@ while True:
         if lost:
             game_over = True
 
-
     # render fireballs
     draw_fireballs(frame, fireballs, fireball_img)
 
@@ -100,7 +134,7 @@ while True:
     if game_over:
         frame = draw_game_over(frame)
 
-    cv2.putText(frame, "Press 'i' to Import Preset", (20, 30), 
+    cv2.putText(frame, "I: Import Preset | M: Menu", (20, 30), 
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
 
     cv2.imshow("Shield Defense", frame)
@@ -127,6 +161,10 @@ while True:
         game_over = state["game_over"]
         frame_count = state["frame_count"]
         ghast_idle_index = state["ghast_idle_index"]
+
+    # back to menu
+    elif key == ord('m'):
+        app_state = constant.APP_STATE_MENU
 
     # quit game
     elif key == ord('q'):
