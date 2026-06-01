@@ -132,3 +132,35 @@ def draw_score(frame, score):
     cv2.putText(frame, f"Score: {score}", (20, 95),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
 
+
+def draw_countdown(frame, countdown_frames):
+    overlay = frame.copy()
+    cv2.rectangle(overlay, (0, 0), (constant.CAM_W, constant.CAM_H), (0, 0, 0), -1)
+    frame = cv2.addWeighted(frame, 0.45, overlay, 0.55, 0)
+
+    seconds_left = (countdown_frames // constant.COUNTDOWN_FPS) + 1
+
+    if countdown_frames <= constant.COUNTDOWN_FPS // 2:
+        text = "GO!"
+    else:
+        text = str(seconds_left)
+
+    font_scale = 3.0 if text != "GO!" else 2.3
+    thickness = 6
+
+    text_size, _ = cv2.getTextSize(
+        text,
+        cv2.FONT_HERSHEY_SIMPLEX,
+        font_scale,
+        thickness
+    )
+
+    text_x = (constant.CAM_W - text_size[0]) // 2
+    text_y = (constant.CAM_H + text_size[1]) // 2
+
+    cv2.putText(frame, text, (text_x + 4, text_y + 4),
+                cv2.FONT_HERSHEY_SIMPLEX, font_scale, (40, 40, 40), thickness)
+    cv2.putText(frame, text, (text_x, text_y),
+                cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), thickness)
+
+    return frame

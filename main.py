@@ -8,6 +8,7 @@ from renderer import (
     draw_hp,
     draw_deflect_effects,
     draw_score,
+    draw_countdown,
 )
 from vision import detect_hand
 from assets_loader import load_assets
@@ -58,6 +59,7 @@ ghast_idle_index = state["ghast_idle_index"]
 app_state = constant.APP_STATE_MENU
 menu_selected_index = 0
 death_selected_index = 0
+countdown_frames = 0
 
 while True:
 
@@ -84,7 +86,8 @@ while True:
             frame_count = state["frame_count"]
             ghast_idle_index = state["ghast_idle_index"]
 
-            app_state = constant.APP_STATE_PLAYING
+            countdown_frames = constant.COUNTDOWN_FRAMES
+            app_state = constant.APP_STATE_COUNTDOWN
 
         elif action == "Calibrate Camera":
             stop_music()
@@ -131,10 +134,33 @@ while True:
         if largest_contour is not None:
             cv2.drawContours(frame, [largest_contour], -1, (0, 255, 0), 2)
 
+    # handle countdown
+    if app_state == constant.APP_STATE_COUNTDOWN:
+        countdown_frames -= 1
+
+        frame = draw_countdown(frame, countdown_frames)
+
+        if countdown_frames <= 0:
+            app_state = constant.APP_STATE_PLAYING
+
+        cv2.imshow("Shield Defense", frame)
+        cv2.imshow("Clean Mask", mask)
+
+        key = cv2.waitKey(1) & 0xFF
+
+        if key == ord('q'):
+            break
+
+        elif key == ord('m'):
+            play_menu_music()
+            app_state = constant.APP_STATE_MENU
+
+        continue
+
     # ghast movemenent + shooting
     frame_count += 1
 
-    if not game_over:
+    if app_state == constant.APP_STATE_PLAYING and not game_over:
         events = update_ghast(ghast, fireballs)
 
         for event in events:
@@ -151,7 +177,7 @@ while True:
     )
 
     # update fireballs
-    if not game_over:
+    if app_state == constant.APP_STATE_PLAYING and not game_over:
         hp, score, lost, events = update_fireballs(
             fireballs,
             hand_detected,
@@ -199,6 +225,9 @@ while True:
             play_sfx("select")
 
             state = reset_game_state()
+
+            countdown_frames = constant.COUNTDOWN_FRAMES
+            app_state = constant.APP_STATE_COUNTDOWN
 
             ghast = state["ghast"]
             fireballs = state["fireballs"]
