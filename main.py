@@ -6,6 +6,7 @@ from tkinter import filedialog, Tk
 import random
 import math
 import constant
+from PIL import Image, ImageSequence
 
 
 def import_preset():
@@ -63,27 +64,17 @@ def overlay_transparent(background, overlay, x, y):
     return background
 
 def load_gif_frames(path, size):
-    cap = cv2.VideoCapture(path)
+    gif = Image.open(path)
     frames = []
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+    for frame in ImageSequence.Iterator(gif):
+        frame = frame.convert("RGBA")
+        frame = frame.resize(size, Image.Resampling.NEAREST)
 
-        frame = cv2.resize(frame, size)
+        rgba = np.array(frame)
+        bgra = cv2.cvtColor(rgba, cv2.COLOR_RGBA2BGRA)
 
-        # GIF dari OpenCV biasanya BGR tanpa alpha.
-        # Background hitam dibuat transparan.
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        alpha = np.where(gray > 10, 255, 0).astype(np.uint8)
-
-        frame_bgra = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
-        frame_bgra[:, :, 3] = alpha
-
-        frames.append(frame_bgra)
-
-    cap.release()
+        frames.append(bgra)
 
     if not frames:
         raise FileNotFoundError(f'GIF tidak bisa dibaca: {path}')
