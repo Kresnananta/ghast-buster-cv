@@ -34,39 +34,39 @@ A computer vision-based mini-game inspired by Minecraft mechanics, built entirel
 
 ```text
 ghast-buster-cv/
-+-- assets/
-|   +-- fonts/
-|   |   +-- Minecraft.ttf
-|   +-- sound/
-|   |   +-- death.mp3
-|   |   +-- deflect.mp3
-|   |   +-- hit.mp3
-|   |   +-- menu_bgm.mp3
-|   |   +-- select.mp3
-|   |   +-- shoot.mp3
-|   +-- fireball.png
-|   +-- ghast_idle.gif
-|   +-- ghast_shooting.png
-|   +-- menu_background.jpg
-|   +-- shield.png
-+-- docs/
-|   +-- screenshots/
-+-- preset/
-|   +-- b211_defaultLight.json
-|   +-- bedroom_whiteLamp.json
-+-- assets_loader.py
-+-- audio_manager.py
-+-- calibrateCam.py
-+-- constant.py
-+-- death_screen.py
-+-- game.py
-+-- main.py
-+-- menu.py
-+-- preset_manager.py
-+-- renderer.py
-+-- vision.py
-+-- PROGRESS.md
-+-- README.md
+├── assets/
+│   ├── fonts/
+│   │   └── Minecraft.ttf
+│   ├── sound/
+│   │   ├── death.mp3
+│   │   ├── deflect.mp3
+│   │   ├── hit.mp3
+│   │   ├── menu_bgm.mp3
+│   │   ├── select.mp3
+│   │   └── shoot.mp3
+│   ├── fireball.png
+│   ├── ghast_idle.gif
+│   ├── ghast_shooting.png
+│   ├── menu_background.jpg
+│   └── shield.png
+├── docs/
+│   └── screenshots/
+├── preset/
+│   ├── b211_defaultLight.json
+│   └── bedroom_whiteLamp.json
+├── assets_loader.py
+├── audio_manager.py
+├── calibrateCam.py
+├── constant.py
+├── death_screen.py
+├── game.py
+├── main.py
+├── menu.py
+├── preset_manager.py
+├── renderer.py
+├── vision.py
+├── PROGRESS.md
+└── README.md
 ```
 
 ## Installation Guide
