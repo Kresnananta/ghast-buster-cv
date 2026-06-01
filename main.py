@@ -60,6 +60,7 @@ menu_selected_index = 0
 death_selected_index = 0
 
 while True:
+
     # handle menu
     if app_state == constant.APP_STATE_MENU:
         frame = draw_main_menu(menu_background, menu_selected_index)
@@ -95,6 +96,15 @@ while True:
             cap = cv2.VideoCapture(0)
             app_state = constant.APP_STATE_MENU
             play_menu_music()
+
+        elif action == "Import Preset":
+            play_sfx("select")
+
+            new_lower, new_upper = import_preset()
+            if new_lower is not None:
+                lower_skin = new_lower
+                upper_skin = new_upper
+                print('Preset berhasil di import')
 
         elif action == "Quit Game":
             play_sfx("select")
@@ -173,14 +183,13 @@ while True:
     if game_over:
         frame = draw_death_screen(frame, score, death_selected_index)
 
-    cv2.putText(frame, "I: Import Preset | M: Menu", (20, 30), 
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
 
     cv2.imshow("Shield Defense", frame)
     cv2.imshow("Clean Mask", mask)
 
     key = cv2.waitKey(1) & 0xFF
 
+    # handle death screen input
     if game_over:
         death_selected_index, action = handle_death_input(key, death_selected_index)
         if key in [ord('w'), ord('W'), ord('s'), ord('S'), 82, 84]:
@@ -222,14 +231,6 @@ while True:
             break
 
         continue
-
-    # import preset
-    if key == ord('i'):
-        new_lower, new_upper = import_preset()
-        if new_lower is not None:
-            lower_skin = new_lower
-            upper_skin = new_upper
-            print('Preset berhasil di import')
 
     # quit game
     elif key == ord('q'):

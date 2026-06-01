@@ -6,6 +6,7 @@ import constant
 MENU_ITEMS = [
     "Play Game",
     "Calibrate Camera",
+    "Import Preset",
     "Quit Game",
 ]
 
@@ -76,8 +77,8 @@ def draw_main_menu(background, selected_index):
     button_w = 330
     button_h = 42
     button_x = (constant.CAM_W - button_w) // 2
-    start_y = 205
-    gap = 55
+    start_y = 190
+    gap = 52
 
     for i, item in enumerate(MENU_ITEMS):
         button_y = start_y + i * gap
