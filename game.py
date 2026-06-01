@@ -15,6 +15,18 @@ def create_ghast():
     }
 
 
+def reset_game_state():
+    return {
+        "ghast": create_ghast(),
+        "fireballs": [],
+        "deflect_effects": [],
+        "hp": constant.MAX_HP,
+        "game_over": False,
+        "frame_count": 0,
+        "ghast_idle_index": 0,
+    }
+
+
 def spawn_deflect_effect(deflect_effects, x, y):
     sparks = []
 

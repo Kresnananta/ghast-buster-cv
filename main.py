@@ -1,10 +1,18 @@
 import cv2
 import constant
 from preset_manager import import_preset
-from renderer import overlay_transparent, draw_hp, draw_deflect_effects
+from renderer import (
+    draw_shield,
+    draw_ghast,
+    draw_fireballs,
+    draw_hp,
+    draw_deflect_effects,
+    draw_game_over,
+)
 from vision import detect_hand
 from assets_loader import load_assets
-from game import create_ghast, update_ghast, update_fireballs
+from game import reset_game_state, update_ghast, update_fireballs
+
 
 cap = cv2.VideoCapture(0)
 
@@ -20,15 +28,16 @@ ghast_shooting_img = assets["ghast_shooting"]
 lower_skin = constant.DEFAULT_LOWER_SKIN
 upper_skin = constant.DEFAULT_UPPER_SKIN
 
-ghast = create_ghast()
-fireballs = []
-deflect_effects = []
+# initial state
+state = reset_game_state()
 
-hp = constant.MAX_HP
-game_over = False
-
-frame_count = 0
-ghast_idle_index = 0
+ghast = state["ghast"]
+fireballs = state["fireballs"]
+deflect_effects = state["deflect_effects"]
+hp = state["hp"]
+game_over = state["game_over"]
+frame_count = state["frame_count"]
+ghast_idle_index = state["ghast_idle_index"]
 
 while True:
     ret, frame = cap.read()
@@ -43,9 +52,8 @@ while True:
     )
 
     if hand_detected:
-        shield_x = cx - constant.SHIELD_SIZE // 2
-        shield_y = cy - constant.SHIELD_SIZE // 2
-        overlay_transparent(frame, shield_img, shield_x, shield_y)
+        # render shield
+        draw_shield(frame, shield_img, cx, cy)
 
         if largest_contour is not None:
             cv2.drawContours(frame, [largest_contour], -1, (0, 255, 0), 2)
@@ -57,15 +65,14 @@ while True:
         update_ghast(ghast, fireballs)
 
     # render ghast
-    if ghast["state"] == "idle":
-        if frame_count % 4 == 0:
-            ghast_idle_index = (ghast_idle_index + 1) % len(ghast_idle_frames)
-
-        current_ghast_img = ghast_idle_frames[ghast_idle_index]
-    else:
-        current_ghast_img = ghast_shooting_img
-
-    overlay_transparent(frame, current_ghast_img, int(ghast["x"]), ghast["y"])
+    ghast_idle_index = draw_ghast(
+        frame,
+        ghast,
+        ghast_idle_frames,
+        ghast_shooting_img,
+        frame_count,
+        ghast_idle_index
+    )
 
     # update fireballs
     if not game_over:
@@ -83,26 +90,15 @@ while True:
 
 
     # render fireballs
-    for fireball in fireballs:
-        fx = fireball["x"]
-        fy = fireball["y"]
+    draw_fireballs(frame, fireballs, fireball_img)
 
-        fireball_x = int(fx) - constant.FIREBALL_SIZE // 2
-        fireball_y = int(fy) - constant.FIREBALL_SIZE // 2
-        overlay_transparent(frame, fireball_img, fireball_x, fireball_y)
-
+    # render efek
     draw_deflect_effects(frame, deflect_effects)
+    # render heart
     draw_hp(frame, hp)
 
     if game_over:
-        dim = frame.copy()
-        cv2.rectangle(dim, (0, 0), (constant.CAM_W, constant.CAM_H), (0, 0, 0), -1)
-        frame = cv2.addWeighted(frame, 0.45, dim, 0.55, 0)
-
-        cv2.putText(frame, "GAME OVER", (145, 220),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.4, (0, 0, 255), 4)
-        cv2.putText(frame, "Press R to Restart or Q to Quit", (95, 265),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 255), 2)
+        frame = draw_game_over(frame)
 
     cv2.putText(frame, "Press 'i' to Import Preset", (20, 30), 
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
@@ -122,13 +118,15 @@ while True:
     
     # restart game
     elif key == ord('r'):
-        ghast = create_ghast()
-        fireballs.clear()
-        deflect_effects.clear()
-        hp = constant.MAX_HP
-        game_over = False
-        frame_count = 0
-        ghast_idle_index = 0
+        state = reset_game_state()
+
+        ghast = state["ghast"]
+        fireballs = state["fireballs"]
+        deflect_effects = state["deflect_effects"]
+        hp = state["hp"]
+        game_over = state["game_over"]
+        frame_count = state["frame_count"]
+        ghast_idle_index = state["ghast_idle_index"]
 
     # quit game
     elif key == ord('q'):
