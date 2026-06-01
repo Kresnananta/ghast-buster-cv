@@ -69,7 +69,7 @@ def run_calibration():
         if key == ord('s'):
             export_preset(l_h, l_s, l_v, u_h, u_s, u_v)
 
-        elif cv2.waitKey(1) & 0xFF == ord('q'):
+        elif key == ord('q'):
             break
 
     cap.release()
