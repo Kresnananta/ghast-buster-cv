@@ -18,7 +18,8 @@ def import_preset():
     if file_path:
         with open(file_path, 'r') as f:
             data = json.load(f)
-            return np.array(data['lower']), np.array(data['upper'])
+            preset_name = os.path.splitext(os.path.basename(file_path))[0]
+            return np.array(data['lower']), np.array(data['upper']), preset_name
     
     # kalau di cancel
-    return None, None
+    return None, None, None

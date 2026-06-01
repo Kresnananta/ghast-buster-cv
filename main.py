@@ -8,6 +8,7 @@ from renderer import (
     draw_hp,
     draw_deflect_effects,
     draw_score,
+    draw_active_preset,
     draw_countdown,
 )
 from vision import detect_hand
@@ -43,6 +44,8 @@ menu_background = assets["menu_background"]
 # default value
 lower_skin = constant.DEFAULT_LOWER_SKIN
 upper_skin = constant.DEFAULT_UPPER_SKIN
+
+active_preset_name = "Default"
 
 # initial state
 state = reset_game_state()
@@ -103,11 +106,12 @@ while True:
         elif action == "Import Preset":
             play_sfx("select")
 
-            new_lower, new_upper = import_preset()
+            new_lower, new_upper, preset_name = import_preset()
             if new_lower is not None:
                 lower_skin = new_lower
                 upper_skin = new_upper
-                print('Preset berhasil di import')
+                active_preset_name = preset_name
+                print(f'Preset berhasil di import: {active_preset_name}')
 
         elif action == "Quit Game":
             play_sfx("select")
@@ -204,6 +208,7 @@ while True:
     draw_hp(frame, hp)
     # render score
     draw_score(frame, score)
+    draw_active_preset(frame, active_preset_name)
 
     # render death screen
     if game_over:

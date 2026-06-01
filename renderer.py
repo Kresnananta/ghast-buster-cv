@@ -131,6 +131,15 @@ def draw_fireballs(frame, fireballs, fireball_img):
 def draw_score(frame, score):
     cv2.putText(frame, f"Score: {score}", (20, 95),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+    
+
+def draw_active_preset(frame, preset_name):
+    text = f"Preset: {preset_name}"
+
+    cv2.putText(frame, text, (20, constant.CAM_H - 18),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.45, (30, 30, 30), 3)
+    cv2.putText(frame, text, (20, constant.CAM_H - 18),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.45, (230, 230, 230), 1)
 
 
 def draw_countdown(frame, countdown_frames):
