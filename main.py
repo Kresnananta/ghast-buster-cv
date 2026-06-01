@@ -62,6 +62,51 @@ def overlay_transparent(background, overlay, x, y):
 
     return background
 
+def spawn_deflect_effect(x, y):
+    sparks = []
+
+    for _ in range(constant.DEFLECT_SPARK_COUNT):
+        angle = random.uniform(-math.pi, 0)
+        speed = random.uniform(3, constant.DEFLECT_SPARK_SPEED)
+
+        sparks.append({
+            "x": x,
+            "y": y,
+            "vx": math.cos(angle) * speed,
+            "vy": math.sin(angle) * speed,
+        })
+
+    deflect_effects.append({
+        "x": x,
+        "y": y,
+        "life": constant.DEFLECT_EFFECT_LIFE,
+        "max_life": constant.DEFLECT_EFFECT_LIFE,
+        "sparks": sparks,
+    })
+
+def draw_deflect_effects(frame):
+    for effect in deflect_effects[:]:
+        life = effect["life"]
+        max_life = effect["max_life"]
+
+        intensity = int(255 * (life / max_life))
+        spark_color = (0, min(255, intensity + 80), 255)
+
+        for spark in effect["sparks"]:
+            spark["x"] += spark["vx"]
+            spark["y"] += spark["vy"]
+            spark["vy"] += 0.35
+
+            sx = int(spark["x"])
+            sy = int(spark["y"])
+
+            cv2.rectangle(frame, (sx - 2, sy - 2), (sx + 2, sy + 2), spark_color, -1)
+
+        effect["life"] -= 1
+
+        if effect["life"] <= 0:
+            deflect_effects.remove(effect)
+
 cap = cv2.VideoCapture(0)
 
 # load assets
@@ -79,6 +124,8 @@ lower_skin = constant.DEFAULT_LOWER_SKIN
 upper_skin = constant.DEFAULT_UPPER_SKIN
 
 enemies = []
+
+deflect_effects = []
 
 while True:
     ret, frame = cap.read()
@@ -137,14 +184,16 @@ while True:
 
             if distance < (constant.SHIELD_RAD + constant.ENEMY_RAD):
                 enemies.remove(enemy)
-                # efek
-                cv2.circle(frame, (ex, int(enemy[1])), constant.ENEMY_RAD + 20, (255, 255, 255), 2)
+                # draw deflect effect
+                spawn_deflect_effect(ex, int(enemy[1]))
                 continue
             
         # kalo enemy lolos
         if enemy[1] > 480:
             enemies.remove(enemy)
             # harusnya hitpoint berkurang nanti
+
+    draw_deflect_effects(frame)
 
     cv2.putText(frame, "Press 'i' to Import Preset", (20, 30), 
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
