@@ -13,6 +13,7 @@ from vision import detect_hand
 from assets_loader import load_assets
 from game import reset_game_state, update_ghast, update_fireballs
 from menu import draw_main_menu, handle_menu_input
+from calibrateCam import run_calibration
 
 
 cap = cv2.VideoCapture(0)
@@ -67,7 +68,13 @@ while True:
             app_state = constant.APP_STATE_PLAYING
 
         elif action == "Calibrate Camera":
-            print("Calibration menu belum disambungkan. Step berikutnya.")
+            cap.release()
+            cv2.destroyAllWindows()
+
+            run_calibration()
+
+            cap = cv2.VideoCapture(0)
+            app_state = constant.APP_STATE_MENU
 
         elif action == "Quit Game":
             break
