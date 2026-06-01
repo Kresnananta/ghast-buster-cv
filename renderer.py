@@ -109,6 +109,10 @@ def draw_ghast(frame, ghast, ghast_idle_frames, ghast_shooting_img, frame_count,
     else:
         current_ghast_img = ghast_shooting_img
 
+    # mirror kalo ke kanan
+    if ghast.get("facing", -1) == 1:
+        current_ghast_img = cv2.flip(current_ghast_img, 1)
+
     overlay_transparent(frame, current_ghast_img, int(ghast["x"]), ghast["y"])
 
     return ghast_idle_index

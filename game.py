@@ -3,16 +3,42 @@ import random
 import constant
 
 def create_ghast():
+    start_x = (constant.CAM_W - constant.GHAST_W) // 2
+
     return {
-        "x": (constant.CAM_W - constant.GHAST_W) // 2,
+        "x": start_x,
         "y": constant.GHAST_Y,
         "vx": constant.GHAST_SPEED,
+        "target_x": random.randint(constant.GHAST_MIN_X, constant.GHAST_MAX_X),
         "cooldown": constant.FIREBALL_COOLDOWN,
         "state": "idle",
         "shoot_timer": 0,
         "burst_left": 0,
+        "burst_total": 0,
         "burst_timer": 0,
+        "facing": -1,
     }
+
+
+def pick_new_ghast_target(ghast):
+    current_x = int(ghast["x"])
+
+    while True:
+        target_x = random.randint(constant.GHAST_MIN_X, constant.GHAST_MAX_X)
+
+        if abs(target_x - current_x) > constant.GHAST_W // 2:
+            break
+
+    speed = random.randint(constant.GHAST_MIN_SPEED, constant.GHAST_MAX_SPEED)
+
+    if target_x > current_x:
+        ghast["vx"] = speed
+        ghast["facing"] = 1
+    else:
+        ghast["vx"] = -speed
+        ghast["facing"] = -1
+
+    ghast["target_x"] = target_x
 
 
 def reset_game_state():
@@ -53,32 +79,55 @@ def spawn_deflect_effect(deflect_effects, x, y):
 
 def update_ghast(ghast, fireballs):
     
+    # idle
     if ghast["state"] == "idle":
         ghast["x"] += ghast["vx"]
 
-        if ghast["x"] <= 0 or ghast["x"] + constant.GHAST_W >= constant.CAM_W:
-            ghast["vx"] *= -1
-            ghast["x"] = max(0, min(ghast["x"], constant.CAM_W - constant.GHAST_W))
+        reached_target = (
+            ghast["vx"] > 0 and ghast["x"] >= ghast["target_x"]
+        ) or (
+            ghast["vx"] < 0 and ghast["x"] <= ghast["target_x"]
+        )
+
+        out_of_bounds = (
+            ghast["x"] <= constant.GHAST_MIN_X
+            or ghast["x"] >= constant.GHAST_MAX_X
+        )
+
+        if reached_target or out_of_bounds:
+            ghast["x"] = max(constant.GHAST_MIN_X, min(ghast["x"], constant.GHAST_MAX_X))
+            pick_new_ghast_target(ghast)
 
         ghast["cooldown"] -= 1
 
         if ghast["cooldown"] <= 0:
+            burst_count = random.randint(
+                constant.GHAST_MIN_BURST_COUNT,
+                constant.GHAST_MAX_BURST_COUNT
+            )
+
             ghast["state"] = "shooting"
             ghast["shoot_timer"] = constant.GHAST_SHOOT_DURATION
-            ghast["burst_left"] = constant.GHAST_BURST_COUNT
+            ghast["burst_left"] = burst_count
+            ghast["burst_total"] = burst_count
             ghast["burst_timer"] = constant.GHAST_SHOOT_START_DELAY
 
+    # shooting
     elif ghast["state"] == "shooting":
         ghast["shoot_timer"] -= 1
         ghast["burst_timer"] -= 1
 
         if ghast["burst_left"] > 0 and ghast["burst_timer"] <= 0 and len(fireballs) < constant.MAX_FIREBALLS:
-            mouth_x = int(ghast["x"]) + constant.GHAST_MOUTH_OFFSET_X
+            # bedain posisi mulut kalo miror
+            if ghast.get("facing", -1) == 1:
+                mouth_x = int(ghast["x"]) + constant.GHAST_W - constant.GHAST_MOUTH_OFFSET_X
+            else:
+                mouth_x = int(ghast["x"]) + constant.GHAST_MOUTH_OFFSET_X
             mouth_y = ghast["y"] + constant.GHAST_MOUTH_OFFSET_Y
 
-            spread_index = ghast["burst_left"] - 1
-            spread_values = [-constant.GHAST_FIREBALL_SPREAD_X, 0, constant.GHAST_FIREBALL_SPREAD_X]
-            vx = spread_values[spread_index % len(spread_values)]
+            shot_index = ghast["burst_total"] - ghast["burst_left"]
+            center = (ghast["burst_total"] - 1) / 2
+            vx = (shot_index - center) * constant.GHAST_FIREBALL_SPREAD_X
 
             fireballs.append({
                 "x": mouth_x,
