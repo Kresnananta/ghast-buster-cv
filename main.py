@@ -95,6 +95,7 @@ while True:
         # kalo enemy lolos
         if enemy[1] > 480:
             enemies.remove(enemy)
+            # harusnya hitpoint berkurang nanti
 
     cv2.putText(frame, "Press 'i' to Import Preset", (20, 30), 
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
