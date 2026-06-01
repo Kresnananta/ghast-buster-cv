@@ -62,6 +62,34 @@ def overlay_transparent(background, overlay, x, y):
 
     return background
 
+def load_gif_frames(path, size):
+    cap = cv2.VideoCapture(path)
+    frames = []
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        frame = cv2.resize(frame, size)
+
+        # GIF dari OpenCV biasanya BGR tanpa alpha.
+        # Background hitam dibuat transparan.
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        alpha = np.where(gray > 10, 255, 0).astype(np.uint8)
+
+        frame_bgra = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
+        frame_bgra[:, :, 3] = alpha
+
+        frames.append(frame_bgra)
+
+    cap.release()
+
+    if not frames:
+        raise FileNotFoundError(f'GIF tidak bisa dibaca: {path}')
+
+    return frames
+
 def spawn_deflect_effect(x, y):
     sparks = []
 
@@ -113,6 +141,10 @@ def create_ghast():
         "y": constant.GHAST_Y,
         "vx": constant.GHAST_SPEED,
         "cooldown": constant.FIREBALL_COOLDOWN,
+        "state": "idle",
+        "shoot_timer": 0,
+        "burst_left": 0,
+        "burst_timer": 0,
     }
 
 def draw_pixel_heart(frame, x, y, filled=True):
@@ -151,14 +183,21 @@ cap = cv2.VideoCapture(0)
 # load assets
 shield_img = cv2.imread(constant.SHIELD_ASSET, cv2.IMREAD_UNCHANGED)
 fireball_img = cv2.imread(constant.FIREBALL_ASSET, cv2.IMREAD_UNCHANGED)
-ghast_img = cv2.imread(constant.GHAST_ASSET, cv2.IMREAD_UNCHANGED)
+ghast_idle_frames = load_gif_frames(
+    constant.GHAST_IDLE_ASSET,
+    (constant.GHAST_W, constant.GHAST_H)
+)
+ghast_shooting_img = cv2.imread(constant.GHAST_SHOOTING_ASSET, cv2.IMREAD_UNCHANGED)
 
-if shield_img is None or fireball_img is None or ghast_img is None:
-    raise FileNotFoundError('Asset shileld.png, fireball.png, atau ghast.png tidak ditemukan di folder assets')
+if shield_img is None or fireball_img is None or ghast_shooting_img is None:
+    raise FileNotFoundError('Asset shileld.png, fireball.png, atau ghast_shooting.png tidak ditemukan di folder assets')
 
 shield_img = cv2.resize(shield_img, (constant.SHIELD_SIZE, constant.SHIELD_SIZE))
 fireball_img = cv2.resize(fireball_img, (constant.FIREBALL_SIZE, constant.FIREBALL_SIZE))
-ghast_img = cv2.resize(ghast_img, (constant.GHAST_W, constant.GHAST_H))
+ghast_shooting_img = cv2.resize(
+    ghast_shooting_img,
+    (constant.GHAST_W, constant.GHAST_H)
+)
 
 # default value
 lower_skin = constant.DEFAULT_LOWER_SKIN
@@ -170,6 +209,9 @@ deflect_effects = []
 
 hp = constant.MAX_HP
 game_over = False
+
+frame_count = 0
+ghast_idle_index = 0
 
 while True:
     ret, frame = cap.read()
@@ -209,31 +251,65 @@ while True:
                 cv2.drawContours(frame, [largest_contour], -1, (0, 255, 0), 2) # gambar area tangan
 
     # ghast movemenent + shooting
+    frame_count += 1
+
     if not game_over:
-        ghast["x"] += ghast["vx"]
+        if ghast["state"] == "idle":
+            ghast["x"] += ghast["vx"]
 
-        if ghast["x"] <= 0 or ghast["x"] + constant.GHAST_W >= constant.CAM_W:
-            ghast["vx"] *= -1
-            ghast["x"] = max(0, min(ghast["x"], constant.CAM_W - constant.GHAST_W))
+            if ghast["x"] <= 0 or ghast["x"] + constant.GHAST_W >= constant.CAM_W:
+                ghast["vx"] *= -1
+                ghast["x"] = max(0, min(ghast["x"], constant.CAM_W - constant.GHAST_W))
 
-        ghast["cooldown"] -= 1
+            ghast["cooldown"] -= 1
 
-        mouth_x = int(ghast["x"]) + constant.GHAST_MOUTH_OFFSET_X
-        mouth_y = ghast["y"] + constant.GHAST_MOUTH_OFFSET_Y
+            if ghast["cooldown"] <= 0:
+                ghast["state"] = "shooting"
+                ghast["shoot_timer"] = constant.GHAST_SHOOT_DURATION
+                ghast["burst_left"] = constant.GHAST_BURST_COUNT
+                ghast["burst_timer"] = constant.GHAST_SHOOT_START_DELAY
 
-        if ghast["cooldown"] <= 0 and len(fireballs) < constant.MAX_FIREBALLS:
-            fireballs.append({
-                "x": mouth_x,
-                "y": mouth_y,
-                "vy": constant.ENEMY_SPEED,
-            })
-            ghast["cooldown"] = constant.FIREBALL_COOLDOWN
+        elif ghast["state"] == "shooting":
+            ghast["shoot_timer"] -= 1
+            ghast["burst_timer"] -= 1
 
-    overlay_transparent(frame, ghast_img, int(ghast["x"]), ghast["y"])
+            if ghast["burst_left"] > 0 and ghast["burst_timer"] <= 0 and len(fireballs) < constant.MAX_FIREBALLS:
+                mouth_x = int(ghast["x"]) + constant.GHAST_MOUTH_OFFSET_X
+                mouth_y = ghast["y"] + constant.GHAST_MOUTH_OFFSET_Y
+
+                spread_index = ghast["burst_left"] - 1
+                spread_values = [-constant.GHAST_FIREBALL_SPREAD_X, 0, constant.GHAST_FIREBALL_SPREAD_X]
+                vx = spread_values[spread_index % len(spread_values)]
+
+                fireballs.append({
+                    "x": mouth_x,
+                    "y": mouth_y,
+                    "vx": vx,
+                    "vy": constant.ENEMY_SPEED,
+                })
+
+                ghast["burst_left"] -= 1
+                ghast["burst_timer"] = constant.GHAST_BURST_INTERVAL
+
+            if ghast["shoot_timer"] <= 0:
+                ghast["state"] = "idle"
+                ghast["cooldown"] = constant.FIREBALL_COOLDOWN
+
+    # render ghast
+    if ghast["state"] == "idle":
+        if frame_count % 4 == 0:
+            ghast_idle_index = (ghast_idle_index + 1) % len(ghast_idle_frames)
+
+        current_ghast_img = ghast_idle_frames[ghast_idle_index]
+    else:
+        current_ghast_img = ghast_shooting_img
+
+    overlay_transparent(frame, current_ghast_img, int(ghast["x"]), ghast["y"])
 
 
     for fireball in fireballs[:]:
         if not game_over:
+            fireball["x"] += fireball["vx"]
             fireball["y"] += fireball["vy"]
 
         fx = fireball["x"]
@@ -251,7 +327,7 @@ while True:
                 spawn_deflect_effect(int(fx), int(fy))
                 continue
 
-        if fy > constant.CAM_H:
+        if fy > constant.CAM_H or fx < 0 or fx > constant.CAM_W:
             fireballs.remove(fireball)
             hp -= 1
 
@@ -295,6 +371,8 @@ while True:
         deflect_effects.clear()
         hp = constant.MAX_HP
         game_over = False
+        frame_count = 0
+        ghast_idle_index = 0
 
     # quit game
     elif key == ord('q'):
