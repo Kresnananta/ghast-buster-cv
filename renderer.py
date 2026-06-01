@@ -124,14 +124,7 @@ def draw_fireballs(frame, fireballs, fireball_img):
         overlay_transparent(frame, fireball_img, fireball_x, fireball_y)
 
 
-def draw_game_over(frame):
-    dim = frame.copy()
-    cv2.rectangle(dim, (0, 0), (constant.CAM_W, constant.CAM_H), (0, 0, 0), -1)
-    frame = cv2.addWeighted(frame, 0.45, dim, 0.55, 0)
+def draw_score(frame, score):
+    cv2.putText(frame, f"Score: {score}", (20, 95),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
 
-    cv2.putText(frame, "GAME OVER", (145, 220),
-                cv2.FONT_HERSHEY_SIMPLEX, 1.4, (0, 0, 255), 4)
-    cv2.putText(frame, "Press R to Restart or Q to Quit", (95, 265),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 255), 2)
-    
-    return frame
