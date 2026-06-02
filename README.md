@@ -193,4 +193,8 @@ The project development progress is separated into this file:
 
 ## Video Demo
 
-[Watch the demo video](docs/screenshots/vid_demo.mp4)
+
+
+https://github.com/user-attachments/assets/30bc34b4-e676-4941-8de2-eb8c2495ebfc
+
+
