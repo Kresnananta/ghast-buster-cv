@@ -34,39 +34,25 @@ A computer vision-based mini-game inspired by Minecraft mechanics, built entirel
 
 ```text
 ghast-buster-cv/
-├── assets/
-│   ├── fonts/
-│   │   └── Minecraft.ttf
-│   ├── sound/
-│   │   ├── death.mp3
-│   │   ├── deflect.mp3
-│   │   ├── hit.mp3
-│   │   ├── menu_bgm.mp3
-│   │   ├── select.mp3
-│   │   └── shoot.mp3
-│   ├── fireball.png
-│   ├── ghast_idle.gif
-│   ├── ghast_shooting.png
-│   ├── menu_background.jpg
-│   └── shield.png
-├── docs/
-│   └── screenshots/
-├── preset/
-│   ├── b211_defaultLight.json
-│   └── bedroom_whiteLamp.json
-├── assets_loader.py
-├── audio_manager.py
-├── calibrateCam.py
-├── constant.py
-├── death_screen.py
-├── game.py
-├── main.py
-├── menu.py
-├── preset_manager.py
-├── renderer.py
-├── vision.py
-├── PROGRESS.md
-└── README.md
+├── assets/                 # Game visual and audio assets
+│   ├── fonts/              # Pixel-style font assets
+│   └── sound/              # Music and sound effects
+├── docs/                   # Documentation media and progress notes
+│   ├── screenshots/        # Game screenshots and demo video
+│   └── PROGRESS.md         # Development progress checklist
+├── preset/                 # Exported HSV calibration presets
+├── assets_loader.py        # Loads image, GIF, font, and other visual assets
+├── audio_manager.py        # Handles music and sound effects with pygame.mixer
+├── calibrateCam.py         # HSV camera calibration and preset export tool
+├── constant.py             # Global configuration, paths, sizes, and gameplay values
+├── death_screen.py         # Death screen UI and input handling
+├── game.py                 # Gameplay state, Ghast logic, fireballs, collision, HP, and score
+├── main.py                 # Main entry point and application state loop
+├── menu.py                 # Main menu UI and input handling
+├── preset_manager.py       # HSV preset import logic
+├── renderer.py             # Rendering helpers for sprites, HUD, effects, and countdown
+├── vision.py               # Computer Vision hand detection pipeline
+└── README.md               # Project report and technical guide
 ```
 
 ## Installation Guide
@@ -189,20 +175,22 @@ The project development progress is separated into this file:
 
 ## Screenshots
 
-Screenshot placeholders:
+### Main Menu
 
-```md
-![Main Menu](docs/screenshots/main-menu.png)
-![Gameplay](docs/screenshots/gameplay.png)
-![Calibration](docs/screenshots/calibration.png)
-![Death Screen](docs/screenshots/death-screen.png)
-```
+![Main Menu](docs/screenshots/main_menu.png)
 
+### Gameplay
+
+![Gameplay](docs/screenshots/Screenshot%202026-06-02%20134158.png)
+
+### Camera Calibration
+
+![Camera Calibration](docs/screenshots/calibrate_cam.png)
+
+### Death Screen
+
+![Death Screen](docs/screenshots/death_screen.png)
 
 ## Video Demo
 
-Video demonstration link:
-
-```text
-.
-```
+[Watch the demo video](docs/screenshots/vid_demo.mp4)

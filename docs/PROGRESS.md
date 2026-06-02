@@ -23,13 +23,13 @@ This document tracks the development progress of **Ghast Buster CV**.
 - [x] Death screen with retry, main menu, and final score.
 - [x] Audio feedback using `pygame.mixer`.
 
-## Pending Documentation
+## Documentation
 
-- [ ] Add main menu screenshot.
-- [ ] Add gameplay screenshot.
-- [ ] Add calibration screenshot.
-- [ ] Add death screen screenshot.
-- [ ] Add video demonstration link.
+- [x] Add main menu screenshot.
+- [x] Add gameplay screenshot.
+- [x] Add calibration screenshot.
+- [x] Add death screen screenshot.
+- [x] Add video demonstration file.
 
 ## Future Improvements
 
